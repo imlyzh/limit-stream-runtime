@@ -9,4 +9,3 @@ pub trait Deserialize<T> {
     type Res;
     fn deserialize(i: T) -> Self::Res;
 }
-
