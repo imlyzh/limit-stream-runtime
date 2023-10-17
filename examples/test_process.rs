@@ -1,11 +1,9 @@
 use limit_stream_runtime::builtin_type::*;
-use limit_stream_runtime::utils::{ls_read_str, ls_read_uint, ls_write_uint};
-use limit_stream_runtime::{Deserialize, Serialize};
-use rmp::decode::read_array_len;
-use rmp::{
-    decode::Bytes,
-    encode::{buffer::ByteBuf, write_array_len, write_str},
+use limit_stream_runtime::utils::{
+    ls_read_array_len, ls_read_str, ls_read_uint, ls_write_array_len, ls_write_str, ls_write_uint,
+    ByteBuf, Bytes,
 };
+use limit_stream_runtime::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Default)]
 pub struct User {
@@ -17,13 +15,13 @@ pub struct User {
 impl Serialize<Vec<u8>, ()> for User {
     fn serialize(&self) -> Result<Vec<u8>, ()> {
         let mut buf = ByteBuf::new();
-        write_array_len(&mut buf, 3).map_err(|_| ())?;
+        ls_write_array_len(&mut buf, 3)?;
 
-        write_str(&mut buf, &self.name).map_err(|_| ())?;
+        ls_write_str(&mut buf, &self.name)?;
 
-        ls_write_uint(&mut buf, &self.age).map_err(|_| ())?;
+        ls_write_uint(&mut buf, &self.age)?;
 
-        write_str(&mut buf, &self.description).map_err(|_| ())?;
+        ls_write_str(&mut buf, &self.description)?;
 
         Ok(buf.into_vec())
     }
@@ -33,7 +31,7 @@ impl Deserialize<&[u8]> for User {
     type Res = Result<Self, ()>;
     fn deserialize(i: &[u8]) -> Result<Self, ()> {
         let mut buf = Bytes::new(i);
-        if read_array_len(&mut buf).map_err(|_| ())? != 3 {
+        if ls_read_array_len(&mut buf)? != 3 {
             return Err(());
         }
         // #[allow(invalid_value)]
