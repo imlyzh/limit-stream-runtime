@@ -13,7 +13,7 @@ pub type ByteBuf = rmp::encode::buffer::ByteBuf;
 /// write
 
 // pub fn ls_write_struct<T: Ser>(wr: &mut ByteBuf, i: T) -> Result<(), ()> {
-// i.ser(wr)
+    // i.ser(wr)
 // }
 
 pub fn ls_write_array_len(wr: &mut ByteBuf, len: u32) -> Result<(), ()> {
