@@ -3,7 +3,7 @@ use limit_stream_runtime::utils::{
     ls_read_array_len, ls_read_str, ls_read_uint, ls_write_array_len, ls_write_str, ls_write_uint,
     ByteBuf, Bytes,
 };
-use limit_stream_runtime::{Deserialize, Serialize};
+use limit_stream_runtime::{Deser, Ser};
 
 #[derive(Debug, PartialEq, Default)]
 pub struct User {
@@ -12,39 +12,77 @@ pub struct User {
     pub description: String,
 }
 
-impl Serialize<Vec<u8>, ()> for User {
-    fn serialize(&self) -> Result<Vec<u8>, ()> {
-        let mut buf = ByteBuf::new();
-        ls_write_array_len(&mut buf, 3)?;
+impl Ser for User {
+    fn ser(&self, buf: &mut ByteBuf) -> Result<(), ()> {
+        ls_write_array_len(buf, 3)?;
 
-        ls_write_str(&mut buf, &self.name)?;
+        ls_write_str(buf, &self.name)?;
 
-        ls_write_uint(&mut buf, &self.age)?;
+        ls_write_uint(buf, &self.age)?;
 
-        ls_write_str(&mut buf, &self.description)?;
+        ls_write_str(buf, &self.description)?;
 
-        Ok(buf.into_vec())
+        Ok(())
     }
 }
 
-impl Deserialize<&[u8]> for User {
+impl Deser for User {
     type Res = Result<Self, ()>;
-    fn deserialize(i: &[u8]) -> Result<Self, ()> {
-        let mut buf = Bytes::new(i);
-        if ls_read_array_len(&mut buf)? != 3 {
+    fn deser(buf: &mut Bytes) -> Result<Self, ()> {
+        if ls_read_array_len(buf)? != 3 {
             return Err(());
         }
         // #[allow(invalid_value)]
         // let mut value = unsafe { MaybeUninit::<User>::uninit().assume_init() };
         let mut value = User::default();
 
-        value.name = ls_read_str(&mut buf)?;
+        value.name = ls_read_str(buf)?;
 
-        value.age = ls_read_uint(&mut buf)?;
+        value.age = ls_read_uint(buf)?;
 
-        value.description = ls_read_str(&mut buf)?;
+        value.description = ls_read_str(buf)?;
 
         Ok(value)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum UserForm {
+    User(User),
+    Id(Uint),
+}
+
+impl Ser for UserForm {
+    fn ser(&self, buf: &mut ByteBuf) -> Result<(), ()> {
+        ls_write_array_len(buf, 2)?;
+
+        match self {
+            UserForm::User(v) => {
+                ls_write_str(buf, "User")?;
+                v.ser(buf)?;
+            }
+            UserForm::Id(v) => {
+                ls_write_str(buf, "User")?;
+                ls_write_uint(buf, v)?;
+            }
+        }
+
+        return Ok(());
+    }
+}
+
+impl Deser for UserForm {
+    type Res = Result<Self, ()>;
+    fn deser(buf: &mut Bytes) -> Result<Self, ()> {
+        if ls_read_array_len(buf)? != 2 {
+            return Err(());
+        }
+
+        match ls_read_str(buf)?.as_str() {
+            "User" => Ok(UserForm::User(User::deser(buf)?)),
+            "Id" => Ok(UserForm::Id(ls_read_uint(buf)?)),
+            _ => return Err(()),
+        }
     }
 }
 
@@ -54,7 +92,8 @@ fn main() {
         age: 24,
         description: "runner1".to_string(),
     };
-    let channel = src.serialize().unwrap();
-    let dst = User::deserialize(&channel).unwrap();
+    let mut channel = ByteBuf::new();
+    src.ser(&mut channel).unwrap();
+    let dst = User::deser(&mut Bytes::new(channel.as_slice())).unwrap();
     assert_eq!(dst, src);
 }

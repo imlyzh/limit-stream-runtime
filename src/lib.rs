@@ -1,11 +1,13 @@
+use utils::{ByteBuf, Bytes};
+
 pub mod builtin_type;
 pub mod utils;
 
-pub trait Serialize<T, E> {
-    fn serialize(&self) -> Result<T, E>;
+pub trait Ser {
+    fn ser(&self, buf: &mut ByteBuf) -> Result<(), ()>;
 }
 
-pub trait Deserialize<T> {
+pub trait Deser {
     type Res;
-    fn deserialize(i: T) -> Self::Res;
+    fn deser(i: &mut Bytes) -> Self::Res;
 }
