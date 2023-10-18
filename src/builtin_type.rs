@@ -1,7 +1,7 @@
 use rmp::{decode::read_bool, encode::write_bool};
 
 use crate::{
-    utils::{ls_read_int, ls_read_uint, ls_write_int, ls_write_uint},
+    utils::{ls_read_int, ls_read_str, ls_read_uint, ls_write_int, ls_write_str, ls_write_uint},
     Deser, Ser,
 };
 
@@ -51,5 +51,25 @@ impl Deser for Uint {
 
     fn deser(rd: &mut crate::utils::Bytes) -> Self::Res {
         ls_read_uint(rd)
+    }
+}
+
+impl Ser for &str {
+    fn ser(&self, buf: &mut crate::utils::ByteBuf) -> Result<(), ()> {
+        ls_write_str(buf, self)
+    }
+}
+
+impl Ser for String {
+    fn ser(&self, buf: &mut crate::utils::ByteBuf) -> Result<(), ()> {
+        ls_write_str(buf, self)
+    }
+}
+
+impl Deser for String {
+    type Res = Result<Self, ()>;
+
+    fn deser(rd: &mut crate::utils::Bytes) -> Self::Res {
+        ls_read_str(rd)
     }
 }

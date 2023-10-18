@@ -4,7 +4,10 @@ use rmp::{
     Marker::*,
 };
 
-use crate::builtin_type::{Int, Uint};
+use crate::{
+    builtin_type::{Int, Uint},
+    Deser, Ser,
+};
 use rmp::decode::RmpRead;
 
 pub type Bytes<'a> = rmp::decode::Bytes<'a>;
@@ -12,9 +15,9 @@ pub type ByteBuf = rmp::encode::buffer::ByteBuf;
 
 /// write
 
-// pub fn ls_write_struct<T: Ser>(wr: &mut ByteBuf, i: T) -> Result<(), ()> {
-    // i.ser(wr)
-// }
+pub fn ls_write_value<T: Ser>(wr: &mut ByteBuf, i: T) -> Result<(), ()> {
+    i.ser(wr)
+}
 
 pub fn ls_write_array_len(wr: &mut ByteBuf, len: u32) -> Result<(), ()> {
     write_array_len(wr, len).map_err(|_| ())?;
@@ -39,6 +42,10 @@ pub fn ls_write_str(wr: &mut ByteBuf, val: &str) -> Result<(), ()> {
 }
 
 /// read
+
+pub fn ls_read_value<T: Deser<Res = Result<T, ()>>>(wr: &mut Bytes) -> Result<T, ()> {
+    T::deser(wr)
+}
 
 pub fn ls_read_array_len(rd: &mut Bytes) -> Result<u32, ()> {
     read_array_len(rd).map_err(|_| ())
