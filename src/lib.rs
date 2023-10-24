@@ -1,7 +1,7 @@
 use utils::{ByteBuf, Bytes};
 
-pub mod channel;
 pub mod builtin_type;
+pub mod channel;
 pub mod utils;
 
 pub trait Ser {
