@@ -16,7 +16,7 @@ pub trait FromAdapter {
 }
 
 pub trait GetNext<N> {
-    fn next(&self) -> N;
+    fn next(self) -> N;
 }
 
 pub struct Send<T: Ser, N: FromAdapter>(pub Box<dyn Adapter>, [T; 0], [N; 0]);
@@ -24,6 +24,12 @@ pub struct Send<T: Ser, N: FromAdapter>(pub Box<dyn Adapter>, [T; 0], [N; 0]);
 impl<T: Ser, N: FromAdapter> FromAdapter for Send<T, N> {
     fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
         Send(adapt, Default::default(), Default::default())
+    }
+}
+
+impl<T: Ser, N: FromAdapter> GetNext<N> for Send<T, N> {
+    fn next(self) -> N {
+        N::from_adapter(self.0)
     }
 }
 
@@ -41,10 +47,24 @@ impl<T: Deser, N: FromAdapter> FromAdapter for Recv<T, N> {
     }
 }
 
+impl<T: Deser, N: FromAdapter> GetNext<N> for Recv<T, N> {
+  fn next(self) -> N {
+      N::from_adapter(self.0)
+  }
+}
+
 impl<T: Deser, N: FromAdapter> Recv<T, N> {
     pub async fn recv(&self) -> Result<(T, N), Self> {
         todo!()
     }
+}
+
+pub struct Endpoint(pub Box<dyn Adapter>);
+
+impl FromAdapter for Endpoint {
+  fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
+      Endpoint(adapt)
+  }
 }
 
 // pub struct Offer<T: Deser> {
