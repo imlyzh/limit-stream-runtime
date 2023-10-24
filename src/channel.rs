@@ -1,18 +1,47 @@
+use std::future::Future;
+
 use crate::{Deser, Ser};
 
-#[derive(Default)]
-pub struct Send<T: Ser, N>([T; 0], [N; 0]);
-
-impl<T: Ser, N> Send<T, N> {
-    pub async fn send(&self, i: &T) -> Result<N, Self> {
+pub trait Adapter {
+    fn send(&self) -> Box<dyn Future<Output = ()>> {
+        todo!()
+    }
+    fn recv(&self) -> Box<dyn Future<Output = ()>> {
         todo!()
     }
 }
 
-#[derive(Default)]
-pub struct Recv<T: Deser, N>([T; 0], [N; 0]);
+pub trait FromAdapter {
+    fn from_adapter(adapt: Box<dyn Adapter>) -> Self;
+}
 
-impl<T: Deser, N> Recv<T, N> {
+pub trait GetNext<N> {
+    fn next(&self) -> N;
+}
+
+pub struct Send<T: Ser, N: FromAdapter>(pub Box<dyn Adapter>, [T; 0], [N; 0]);
+
+impl<T: Ser, N: FromAdapter> FromAdapter for Send<T, N> {
+    fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
+        Send(adapt, Default::default(), Default::default())
+    }
+}
+
+impl<T: Ser, N: FromAdapter> Send<T, N> {
+    pub async fn send(&self, _i: &T) -> Result<N, Self> {
+        todo!()
+    }
+}
+
+pub struct Recv<T: Deser, N: FromAdapter>(pub Box<dyn Adapter>, [T; 0], [N; 0]);
+
+impl<T: Deser, N: FromAdapter> FromAdapter for Recv<T, N> {
+    fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
+        Recv(adapt, Default::default(), Default::default())
+    }
+}
+
+impl<T: Deser, N: FromAdapter> Recv<T, N> {
     pub async fn recv(&self) -> Result<(T, N), Self> {
         todo!()
     }
