@@ -8,12 +8,12 @@
 #[derive(Debug, PartialEq, Default)]
 pub struct User {
     pub name: String,
-    pub age: limit_stream_runtime::builtin_type::Uint,
+    pub age: limit_stream_runtime::Uint,
     pub description: String,
 }
 
 impl limit_stream_runtime::Ser for User {
-    fn ser(&self, buf: &mut limit_stream_runtime::utils::ByteBuf) -> Result<(), ()> {
+    fn ser(&self, buf: &mut limit_stream_runtime::ByteBuf) -> Result<(), ()> {
         limit_stream_runtime::utils::ls_write_array_len(buf, 3)?;
 
         self.name.ser(buf)?;
@@ -28,7 +28,7 @@ impl limit_stream_runtime::Ser for User {
 
 impl limit_stream_runtime::Deser for User {
     type Res = Result<Self, ()>;
-    fn deser(buf: &mut limit_stream_runtime::utils::Bytes) -> Result<Self, ()> {
+    fn deser(buf: &mut limit_stream_runtime::Bytes) -> Result<Self, ()> {
         if limit_stream_runtime::utils::ls_read_array_len(buf)? != 3 {
             return Err(());
         }
@@ -36,11 +36,11 @@ impl limit_stream_runtime::Deser for User {
         // let mut value = unsafe { MaybeUninit::<User>::uninit().assume_init() };
         let mut value = User::default();
 
-        value.name = limit_stream_runtime::utils::ls_read_value(buf)?;
+        value.name = limit_stream_runtime::ls_read_value(buf)?;
 
-        value.age = limit_stream_runtime::utils::ls_read_value(buf)?;
+        value.age = limit_stream_runtime::ls_read_value(buf)?;
 
-        value.description = limit_stream_runtime::utils::ls_read_value(buf)?;
+        value.description = limit_stream_runtime::ls_read_value(buf)?;
 
         Ok(value)
     }
@@ -49,20 +49,20 @@ impl limit_stream_runtime::Deser for User {
 #[derive(Debug, PartialEq)]
 pub enum UserForm {
     User(User),
-    Id(limit_stream_runtime::builtin_type::Uint),
+    Id(limit_stream_runtime::Uint),
 }
 
 impl limit_stream_runtime::Ser for UserForm {
-    fn ser(&self, buf: &mut limit_stream_runtime::utils::ByteBuf) -> Result<(), ()> {
+    fn ser(&self, buf: &mut limit_stream_runtime::ByteBuf) -> Result<(), ()> {
         limit_stream_runtime::utils::ls_write_array_len(buf, 2)?;
 
         match self {
             UserForm::User(v) => {
-                limit_stream_runtime::utils::ls_write_str(buf, "User")?;
+                limit_stream_runtime::ls_write_str(buf, "User")?;
                 v.ser(buf)?;
             }
             UserForm::Id(v) => {
-                limit_stream_runtime::utils::ls_write_str(buf, "User")?;
+                limit_stream_runtime::ls_write_str(buf, "User")?;
                 v.ser(buf)?;
             }
         }
@@ -73,16 +73,16 @@ impl limit_stream_runtime::Ser for UserForm {
 
 impl limit_stream_runtime::Deser for UserForm {
     type Res = Result<Self, ()>;
-    fn deser(buf: &mut limit_stream_runtime::utils::Bytes) -> Result<Self, ()> {
-        if limit_stream_runtime::utils::ls_read_array_len(buf)? != 2 {
+    fn deser(buf: &mut limit_stream_runtime::Bytes) -> Result<Self, ()> {
+        if limit_stream_runtime::ls_read_array_len(buf)? != 2 {
             return Err(());
         }
 
-        match limit_stream_runtime::utils::ls_read_str(buf)?.as_str() {
-            "User" => Ok(UserForm::User(limit_stream_runtime::utils::ls_read_value(
+        match limit_stream_runtime::ls_read_str(buf)?.as_str() {
+            "User" => Ok(UserForm::User(limit_stream_runtime::ls_read_value(
                 buf,
             )?)),
-            "Id" => Ok(UserForm::Id(limit_stream_runtime::utils::ls_read_value(
+            "Id" => Ok(UserForm::Id(limit_stream_runtime::ls_read_value(
                 buf,
             )?)),
             _ => return Err(()),
@@ -99,7 +99,7 @@ fn main() {
     let mut channel = rmp::encode::ByteBuf::new();
     limit_stream_runtime::Ser::ser(&src, &mut channel).unwrap();
     let dst = <User as limit_stream_runtime::Deser>::deser(
-        &mut limit_stream_runtime::utils::Bytes::new(channel.as_slice()),
+        &mut limit_stream_runtime::Bytes::new(channel.as_slice()),
     )
     .unwrap();
     assert_eq!(dst, src);
