@@ -48,9 +48,9 @@ impl<T: Deser, N: FromAdapter> FromAdapter for Recv<T, N> {
 }
 
 impl<T: Deser, N: FromAdapter> GetNext<N> for Recv<T, N> {
-  fn next(self) -> N {
-      N::from_adapter(self.0)
-  }
+    fn next(self) -> N {
+        N::from_adapter(self.0)
+    }
 }
 
 impl<T: Deser, N: FromAdapter> Recv<T, N> {
@@ -62,9 +62,9 @@ impl<T: Deser, N: FromAdapter> Recv<T, N> {
 pub struct Endpoint(pub Box<dyn Adapter>);
 
 impl FromAdapter for Endpoint {
-  fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
-      Endpoint(adapt)
-  }
+    fn from_adapter(adapt: Box<dyn Adapter>) -> Self {
+        Endpoint(adapt)
+    }
 }
 
 // pub struct Offer<T: Deser> {

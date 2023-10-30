@@ -79,12 +79,8 @@ impl limit_stream_runtime::Deser for UserForm {
         }
 
         match limit_stream_runtime::ls_read_str(buf)?.as_str() {
-            "User" => Ok(UserForm::User(limit_stream_runtime::ls_read_value(
-                buf,
-            )?)),
-            "Id" => Ok(UserForm::Id(limit_stream_runtime::ls_read_value(
-                buf,
-            )?)),
+            "User" => Ok(UserForm::User(limit_stream_runtime::ls_read_value(buf)?)),
+            "Id" => Ok(UserForm::Id(limit_stream_runtime::ls_read_value(buf)?)),
             _ => return Err(()),
         }
     }
@@ -98,9 +94,9 @@ fn main() {
     };
     let mut channel = rmp::encode::ByteBuf::new();
     limit_stream_runtime::Ser::ser(&src, &mut channel).unwrap();
-    let dst = <User as limit_stream_runtime::Deser>::deser(
-        &mut limit_stream_runtime::Bytes::new(channel.as_slice()),
-    )
+    let dst = <User as limit_stream_runtime::Deser>::deser(&mut limit_stream_runtime::Bytes::new(
+        channel.as_slice(),
+    ))
     .unwrap();
     assert_eq!(dst, src);
 }
